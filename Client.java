@@ -1,223 +1,181 @@
 import java.net.Socket;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.net.URLDecoder;
+import java.io.File;
 
 public class Client implements Runnable {
 
-    private Socket clientSocket;
-    private Thread thread;
+  private Socket clientSocket;
+  private Thread thread;
+  private static final UserStore userStore = new UserStore();
 
-    public Client(Socket clientSocket) {
-        this.clientSocket = clientSocket;
-        thread = new Thread(this);
+  public Client(Socket clientSocket) {
+    this.clientSocket = clientSocket;
+    thread = new Thread(this);
+  }
+
+  public void run() {
+    try (
+    InputStream in = clientSocket.getInputStream();
+    OutputStream out = clientSocket.getOutputStream();
+    BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+    PrintWriter printWriter = new PrintWriter(out, true);
+    BufferedOutputStream dataOut = new BufferedOutputStream(out);
+    ) {
+
+      String firstLine = reader.readLine();
+      if (firstLine == null) return;
+
+      String[] parts = firstLine.split(" ");
+      String method = parts[0];
+      String path = parts[1];
+
+      System.out.println("\n--- Client Request from " + clientSocket.getInetAddress().getHostAddress() + " ---");
+      System.out.println("Method: " + method + ", Path: " + path);
+
+      int contentLength = 0;
+      String headerLine;
+      while ((headerLine = reader.readLine()) != null && !headerLine.isEmpty()) {
+        if (headerLine.startsWith("Content-Length:")) {
+          contentLength = Integer.parseInt(headerLine.substring(16).trim());
+        }
+      }
+
+      Map<String, String> postData = new HashMap<>();
+      if ("POST".equalsIgnoreCase(method) && contentLength > 0) {
+        postData = readPostData(reader, contentLength);
+      }
+
+      String sessionUser = null;
+
+      String responseBody = "";
+      String statusCode = "200 OK";
+      String contentType = "text/html; charset=utf-8";
+      boolean isRedirect = false;
+
+
+      if ("/".equals(path)) {
+        responseBody = getHtmlContent("index.html");
+
+      } else if ("/register".equals(path) && "GET".equalsIgnoreCase(method)) {
+        responseBody = getHtmlContent("register.html")
+        .replace("", "")
+        .replace("", "");
+
+      } else if ("/register".equals(path) && "POST".equalsIgnoreCase(method)) {
+        String username = postData.getOrDefault("username", "").trim();
+        String password = postData.getOrDefault("password", "").trim();
+
+        if (userStore.registerUser(username, password)) {
+          statusCode = "302 Found";
+          isRedirect = true;
+          sendResponseHeader(printWriter, statusCode, contentType, 0, isRedirect, "/login");
+          return;
+        } else {
+          String error = "<p class='error-message'>Ошибка регистрации. Проверьте поля или пользователь с таким именем уже существует.</p>";
+          responseBody = getHtmlContent("register.html")
+          .replace("", error)
+          .replace("", username);
+        }
+
+      } else if ("/login".equals(path) && "GET".equalsIgnoreCase(method)) {
+        responseBody = getHtmlContent("login.html")
+        .replace("", "");
+
+      } else if ("/login".equals(path) && "POST".equalsIgnoreCase(method)) {
+        String username = postData.getOrDefault("username", "").trim();
+        String password = postData.getOrDefault("password", "").trim();
+
+        if (userStore.authenticateUser(username, password)) {
+          System.out.println("User authenticated: " + username);
+
+          statusCode = "302 Found";
+          isRedirect = true;
+          sendResponseHeader(printWriter, statusCode, contentType, 0, isRedirect, "/");
+          return;
+        } else {
+          String error = "<p class='error-message'>Ошибка: Неверное имя пользователя или пароль.</p>";
+          responseBody = getHtmlContent("login.html")
+          .replace("", error);
+        }
+
+      } else {
+        statusCode = "404 Not Found";
+        responseBody = "<h1>404 Not Found</h1><p>Запрашиваемый ресурс не найден.</p>";
+      }
+
+      byte[] data = responseBody.getBytes(StandardCharsets.UTF_8);
+      sendResponseHeader(printWriter, statusCode, contentType, data.length, isRedirect, null);
+      dataOut.write(data, 0, data.length);
+      dataOut.flush();
+
+      } catch (IOException ioe) {
+      if (!ioe.getMessage().contains("Connection reset") && !ioe.getMessage().contains("Socket closed")) {
+        System.out.println("Connection handler error: " + ioe.getMessage());
+      }
+    } finally {
+      try {
+        if (clientSocket != null && !clientSocket.isClosed()) {
+          clientSocket.close();
+        }
+      } catch (IOException e) {
+      }
     }
+  }
 
-    public void run() {
-        try (
-            InputStream in = clientSocket.getInputStream();
-            OutputStream out = clientSocket.getOutputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
-            PrintWriter printWriter = new PrintWriter(out, true);
-            BufferedOutputStream dataOut = new BufferedOutputStream(out);
-        ) {
-            String inputLine;
-            System.out.println("\n--- Client Request from " + clientSocket.getInetAddress().getHostAddress() + " ---");
-
-            while ((inputLine = reader.readLine()) != null && !inputLine.isEmpty()) {
-                System.out.println(inputLine);
-            }
-            System.out.println("--- End of Request ---\n");
-
-            String message = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Form</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .login-container {
-            background: #fff;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 350px;
-        }
-
-        .login-container h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-        }
-
-        input[type="text"], input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        input[type="text"]:focus, input[type="password"]:focus {
-            border-color: #007bff;
-            outline: none;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 10px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .btn:hover {
-            background: #0056b3;
-        }
-
-        .error {
-            color: red;
-            font-size: 13px;
-            margin-top: 5px;
-        }
-
-        .extra-links {
-            text-align: center;
-            margin-top: 15px;
-        }
-
-        .extra-links a {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        .extra-links a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-
-<div class="login-container">
-    <h2>Login</h2>
-    <form id="loginForm" novalidate>
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" required>
-            <div class="error" id="usernameError"></div>
-        </div>
-
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required>
-            <div class="error" id="passwordError"></div>
-        </div>
-
-        <button type="submit" class="btn">Login</button>
-
-        <div class="extra-links">
-            <a href="#">Forgot Password?</a> | <a href="#">Sign Up</a>
-        </div>
-    </form>
-</div>
-
-<script>
-
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        let valid = true;
-
-
-        document.getElementById('usernameError').textContent = '';
-        document.getElementById('passwordError').textContent = '';
-
-        const username = document.getElementById('username').value.trim();
-        if (username === '') {
-            document.getElementById('usernameError').textContent = 'Username is required';
-            valid = false;
-        }
-
-
-        const password = document.getElementById('password').value.trim();
-        if (password === '') {
-            document.getElementById('passwordError').textContent = 'Password is required';
-            valid = false;
-        }
-
-
-        if (valid) {
-            alert('Login successful (demo)');
-        }
-    });
-</script>
-
-</body>
-</html>
-""";
-
-            byte[] data = message.getBytes(StandardCharsets.UTF_8);
-            int fileLength = data.length;
-
-            printWriter.println("HTTP/1.1 200 OK");
-            printWriter.println("Server: Java HTTP Server from Intern Labs 7.0 - Java Backend Developer");
-            printWriter.println("Content-Type: text/html; charset=utf-8");
-            printWriter.println("Content-Length: " + fileLength);
-            printWriter.println();
-            printWriter.flush();
-
-            dataOut.write(data, 0, fileLength);
-            dataOut.flush();
-
-        } catch (IOException ioe) {
-            System.out.println("Connection handler error: " + ioe.getMessage());
-        } finally {
-            try {
-                if (clientSocket != null && !clientSocket.isClosed()) {
-                    clientSocket.close();
-                }
-            } catch (IOException e) {
-            }
-        }
+  private String getHtmlContent(String fileName) {
+    String path = "resources/" + fileName;
+    StringBuilder content = new StringBuilder();
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8))) {
+      String line;
+      while ((line = br.readLine()) != null) {
+        content.append(line).append("\n");
+      }
+    } catch (IOException e) {
+      System.err.println("Error reading HTML file: " + path + " | " + e.getMessage());
+      return "<h1>500 Internal Server Error</h1><p>Template file not found: " + fileName + "</p>";
     }
+    return content.toString();
+  }
 
-    public void go() {
-        thread.start();
+  private Map<String, String> readPostData(BufferedReader reader, int contentLength) throws IOException {
+    char[] charBuffer = new char[contentLength];
+    reader.read(charBuffer, 0, contentLength);
+    String postBody = new String(charBuffer);
+
+    Map<String, String> data = new HashMap<>();
+    String[] pairs = postBody.split("&");
+    for (String pair : pairs) {
+      String[] keyValue = pair.split("=");
+      if (keyValue.length == 2) {
+        try {
+          String key = URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8.name());
+          String value = URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8.name());
+          data.put(key, value);
+        } catch (UnsupportedEncodingException e) {
+        }
+      }
     }
+    return data;
+  }
+
+  private void sendResponseHeader(PrintWriter printWriter, String statusCode, String contentType, int contentLength, boolean isRedirect, String location) {
+    printWriter.println("HTTP/1.1 " + statusCode);
+    printWriter.println("Server: Java HTTP Server - Intern Labs");
+    if (!isRedirect) {
+      printWriter.println("Content-Type: " + contentType);
+      printWriter.println("Content-Length: " + contentLength);
+    } else {
+      printWriter.println("Location: " + location);
+    }
+    printWriter.println();
+    printWriter.flush();
+  }
+
+  public void go() {
+    thread.start();
+  }
 }
