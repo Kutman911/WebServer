@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IQ Тест</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            font-size: 20px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .question-block {
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .options label {
+            display: block;
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .options input[type="radio"] {
+            margin-right: 10px;
+        }
+        .info-text {
+            font-size: 14px;
+            color: #777;
+            margin-top: -10px;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #ff6600;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 30px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #cc5200;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>IQ Тест </h1>
+        <p class="info-text">Ответьте на 10 вопросов разного типа, чтобы проверить свои логические, вербальные и математические способности.</p>
+
+        <form action="/test" method="POST">
+
+            <!-- Вопрос 1:  -->
+            <div class="question-block">
+                <h2>1. Продолжите числовую последовательность: 1, 4, 8, 13, 19, ?</h2>
+                <div class="options">
+                    <label><input type="radio" name="q1" value="a" required> A) 25</label>
+                    <label><input type="radio" name="q1" value="b"> B) 26</label>
+                    <label><input type="radio" name="q1" value="c"> C) 27</label>
+                    <label><input type="radio" name="q1" value="d"> D) 28</label>
+                </div>
+            </div>
+
+            <!-- Вопрос 2: Вербальная аналогия -->
+            <div class="question-block">
+                <h2>2. Выберите слово, которое дополнит аналогию: Хлеб : Пекарь :: Книга : ?</h2>
+                <div class="options">
+                    <label><input type="radio" name="q2" value="a" required> A) Читатель</label>
+                    <label><input type="radio" name="q2" value="b"> B) Библиотека</label>
+                    <label><input type="radio" name="q2" value="c"> C) Писатель</label>
+                    <label><input type="radio" name="q2" value="d"> D) Бумага</label>
+                </div>
+            </div>
+
+            <!-- Вопрос 3:  -->
+            <div class="question-block">
+                <h2>3. Какое слово лишнее в списке?</h2>
+                <div class="options">
+                    <label><input type="radio" name="q3" value="a" required> A) Воробей</label>
+                    <label><input type="radio" name="q3" value="b"> B) Слон</label>
+                    <label><input type="radio" name="q3" value="c"> C) Кот</label>
+                    <label><input type="radio" name="q3" value="d"> D) Собака</label>
+                </div>
+            </div>
+
+            <!-- Вопрос 4:  -->
+            <div class="question-block">
+                <h2>4. Слово "минерал" может быть составлено только из букв, содержащихся в слове "парламент".</h2>
+                <div class="options">
+                    <label><input type="radio" name="q4" value="true" required> Правда</label>
+                    <label><input type="radio" name="q4" value="false"> Ложь</label>
+                </div>
+            </div>
+
+            <!-- Вопрос 5: -->
+            <div class="question-block">
+                <h2>5. Слово "потому" (because) можно составить из первых букв слов в предложении: Большие Слоны Всегда Могут Понять Маленьких Слонов.</h2>
+                <div class="options">
+                    <label><input type="radio" name="q5" value="true" required> Правда</label>
+                    <label><input type="radio" name="q5" value="false"> Ложь</label>
+                </div>
+            </div>
+
+            <!-- Вопрос 6:  -->
+            <div class="question-block">
+                <h2>6. У Гари 48 долларов. Если он займет 57 долларов у Джейн и 15 долларов у Джилл, он сможет купить велосипед за 120 долларов.</h2>
+                <div class="options">
+                    <label><input type="radio" name="q6" value="true" required> Правда</label>
+                    <label><input type="radio" name="q6" value="false"> Ложь</label>
+                </div>
+            </div>
+
+            <!-- Вопрос 7:  -->
+            <div class="question-block">
+                <h2>7. Если Ричард смотрит в зеркало и дотрагивается до левого уха правой рукой, его отражение, кажется, дотрагивается до правого уха левой рукой.</h2>
+                <div class="options">
+                    <label><input type="radio" name="q7" value="true" required> Правда</label>
+                    <label><input type="radio" name="q7" value="false"> Ложь</label>
+                </div>
+            </div>
+
+            <!-- Вопрос 8:  -->
+            <div class="question-block">
+                <h2>8. 27 минут до 7 часов - это 33 минуты после 5 часов.</h2>
+                <div class="options">
+                    <label><input type="radio" name="q8" value="true" required> Правда</label>
+                    <label><input type="radio" name="q8" value="false"> Ложь</label>
+                </div>
+            </div>
+
+            <!-- Вопрос 9:  -->
+            <div class="question-block">
+                <h2>9. Если позавчера было воскресенье, то завтра будет среда.</h2>
+                <div class="options">
+                    <label><input type="radio" name="q9" value="true" required> Правда</label>
+                    <label><input type="radio" name="q9" value="false"> Ложь</label>
+                </div>
+            </div>
+
+            <!-- Вопрос 10:  -->
+            <div class="question-block">
+                <h2>10. Если оставить буквы в том же порядке, но переставить пробелы во фразе "Онаестна", ее можно прочитать как "Тема у сына".</h2>
+                <div class="options">
+                    <label><input type="radio" name="q10" value="true" required> Правда</label>
+                    <label><input type="radio" name="q10" value="false"> Ложь</label>
+                </div>
+            </div>
+
+            <button type="submit">Проверить Результат</button>
+        </form>
+        <a href="/" class="back-link">← Вернуться на главную</a>
+    </div>
+</body>
+</html>

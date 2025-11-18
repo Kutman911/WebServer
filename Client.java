@@ -4,13 +4,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.net.URLDecoder;
-import java.io.File;
 
 public class Client implements Runnable {
 
   private Socket clientSocket;
   private Thread thread;
   private static final UserStore userStore = new UserStore();
+
+  private static final Map<String, Long> activeSessions = new HashMap<>();
+  private static final String SESSION_COOKIE_NAME = "session_user";
 
   public Client(Socket clientSocket) {
     this.clientSocket = clientSocket;
@@ -37,19 +39,26 @@ public class Client implements Runnable {
       System.out.println("Method: " + method + ", Path: " + path);
 
       int contentLength = 0;
+      String cookieHeader = null;
       String headerLine;
       while ((headerLine = reader.readLine()) != null && !headerLine.isEmpty()) {
         if (headerLine.startsWith("Content-Length:")) {
           contentLength = Integer.parseInt(headerLine.substring(16).trim());
+        } else if (headerLine.startsWith("Cookie:")) {
+          cookieHeader = headerLine.substring(8).trim();
         }
+      }
+
+      String sessionUser = getCookieValue(cookieHeader, SESSION_COOKIE_NAME);
+
+      if (sessionUser != null && !activeSessions.containsKey(sessionUser)) {
+        sessionUser = null;
       }
 
       Map<String, String> postData = new HashMap<>();
       if ("POST".equalsIgnoreCase(method) && contentLength > 0) {
         postData = readPostData(reader, contentLength);
       }
-
-      String sessionUser = null;
 
       String responseBody = "";
       String statusCode = "200 OK";
@@ -59,11 +68,16 @@ public class Client implements Runnable {
 
       if ("/".equals(path)) {
         responseBody = getHtmlContent("index.html");
+        if (sessionUser != null) {
+          responseBody = responseBody.replace(
+          "id=\"user-status\"></p>",
+          "id=\"user-status\">Вы вошли как: **" + sessionUser + "** (<a href='/logout'>Выход</a>)</p>");
+        }
 
       } else if ("/register".equals(path) && "GET".equalsIgnoreCase(method)) {
         responseBody = getHtmlContent("register.html")
-        .replace("", "")
-        .replace("", "");
+        .replace("<!-- ERROR_PLACEHOLDER -->", "")
+        .replace("<!-- USERNAME_PLACEHOLDER -->", "");
 
       } else if ("/register".equals(path) && "POST".equalsIgnoreCase(method)) {
         String username = postData.getOrDefault("username", "").trim();
@@ -77,13 +91,13 @@ public class Client implements Runnable {
         } else {
           String error = "<p class='error-message'>Ошибка регистрации. Проверьте поля или пользователь с таким именем уже существует.</p>";
           responseBody = getHtmlContent("register.html")
-          .replace("", error)
-          .replace("", username);
+          .replace("<!-- ERROR_PLACEHOLDER -->", error)
+          .replace("<!-- USERNAME_PLACEHOLDER -->", username);
         }
 
       } else if ("/login".equals(path) && "GET".equalsIgnoreCase(method)) {
         responseBody = getHtmlContent("login.html")
-        .replace("", "");
+        .replace("<!-- ERROR_PLACEHOLDER -->", "");
 
       } else if ("/login".equals(path) && "POST".equalsIgnoreCase(method)) {
         String username = postData.getOrDefault("username", "").trim();
@@ -92,15 +106,72 @@ public class Client implements Runnable {
         if (userStore.authenticateUser(username, password)) {
           System.out.println("User authenticated: " + username);
 
+          activeSessions.put(username, System.currentTimeMillis());
+
           statusCode = "302 Found";
           isRedirect = true;
-          sendResponseHeader(printWriter, statusCode, contentType, 0, isRedirect, "/");
+
+          printWriter.println("HTTP/1.1 " + statusCode);
+          printWriter.println("Server: Java HTTP Server - Intern Labs");
+          setCookie(printWriter, SESSION_COOKIE_NAME, username, 3600);
+          printWriter.println("Location: /");
+          printWriter.println();
+          printWriter.flush();
           return;
+
         } else {
           String error = "<p class='error-message'>Ошибка: Неверное имя пользователя или пароль.</p>";
           responseBody = getHtmlContent("login.html")
-          .replace("", error);
+          .replace("<!-- ERROR_PLACEHOLDER -->", error);
         }
+
+      } else if ("/logout".equals(path) && "GET".equalsIgnoreCase(method)) {
+        if (sessionUser != null) {
+          activeSessions.remove(sessionUser);
+        }
+
+        statusCode = "302 Found";
+        isRedirect = true;
+        printWriter.println("HTTP/1.1 " + statusCode);
+        printWriter.println("Server: Java HTTP Server - Intern Labs");
+        setCookie(printWriter, SESSION_COOKIE_NAME, "deleted", 0);
+        printWriter.println("Location: /");
+        printWriter.println();
+        printWriter.flush();
+        return;
+
+      } else if ("/test".equals(path) && "GET".equalsIgnoreCase(method)) {
+        if (sessionUser == null) {
+          statusCode = "302 Found";
+          isRedirect = true;
+          sendResponseHeader(printWriter, statusCode, contentType, 0, isRedirect, "/login");
+          return;
+        }
+        responseBody = getHtmlContent("test_form.html");
+
+      } else if ("/test".equals(path) && "POST".equalsIgnoreCase(method)) {
+        if (sessionUser == null) {
+          statusCode = "302 Found";
+          isRedirect = true;
+          sendResponseHeader(printWriter, statusCode, contentType, 0, isRedirect, "/login");
+          return;
+        }
+
+        int score = calculateScore(postData);
+        String message;
+
+        if (score == 3) {
+          message = "Великолепный результат! Вы ответили на все вопросы правильно.";
+        } else if (score > 0) {
+          message = "Хороший результат! Но можно и лучше.";
+        } else {
+          message = "Попробуйте еще раз. Некоторые вопросы были не очень сложными.";
+        }
+
+        responseBody = getHtmlContent("test_result.html")
+        .replace("<!-- USERNAME_PLACEHOLDER -->", sessionUser)
+        .replace("<!-- SCORE_PLACEHOLDER -->", String.valueOf(score))
+        .replace("<!-- MESSAGE_PLACEHOLDER -->", message);
 
       } else {
         statusCode = "404 Not Found";
@@ -112,7 +183,7 @@ public class Client implements Runnable {
       dataOut.write(data, 0, data.length);
       dataOut.flush();
 
-      } catch (IOException ioe) {
+    } catch (IOException ioe) {
       if (!ioe.getMessage().contains("Connection reset") && !ioe.getMessage().contains("Socket closed")) {
         System.out.println("Connection handler error: " + ioe.getMessage());
       }
@@ -124,6 +195,23 @@ public class Client implements Runnable {
       } catch (IOException e) {
       }
     }
+  }
+
+  private String getCookieValue(String header, String name) {
+    if (header == null) return null;
+    String[] cookies = header.split(";");
+    for (String cookie : cookies) {
+      String trimmedCookie = cookie.trim();
+      if (trimmedCookie.startsWith(name + "=")) {
+        return trimmedCookie.substring(name.length() + 1);
+      }
+    }
+    return null;
+  }
+
+  private void setCookie(PrintWriter printWriter, String name, String value, int maxAgeSeconds) {
+    String cookieHeader = name + "=" + value + "; Max-Age=" + maxAgeSeconds + "; Path=/";
+    printWriter.println("Set-Cookie: " + cookieHeader);
   }
 
   private String getHtmlContent(String fileName) {
@@ -143,8 +231,10 @@ public class Client implements Runnable {
 
   private Map<String, String> readPostData(BufferedReader reader, int contentLength) throws IOException {
     char[] charBuffer = new char[contentLength];
-    reader.read(charBuffer, 0, contentLength);
-    String postBody = new String(charBuffer);
+    int bytesRead = reader.read(charBuffer, 0, contentLength);
+    if (bytesRead == -1) return new HashMap<>();
+
+    String postBody = new String(charBuffer, 0, bytesRead);
 
     Map<String, String> data = new HashMap<>();
     String[] pairs = postBody.split("&");
@@ -160,6 +250,21 @@ public class Client implements Runnable {
       }
     }
     return data;
+  }
+
+  private int calculateScore(Map<String, String> answers) {
+    int score = 0;
+
+    if ("b".equals(answers.get("q1"))) {
+      score++;
+    }
+    if ("b".equals(answers.get("q2"))) {
+      score++;
+    }
+    if ("b".equals(answers.get("q3"))) {
+      score++;
+    }
+    return score;
   }
 
   private void sendResponseHeader(PrintWriter printWriter, String statusCode, String contentType, int contentLength, boolean isRedirect, String location) {
