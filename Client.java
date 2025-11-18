@@ -195,10 +195,12 @@ public class Client implements Runnable {
     }
   }
 
-  
+
   private String getIndexContent(String sessionUser) {
     return getHtmlContent("index.html").replace(
-    "<p id=\"user-status\" class=\"user-status\"></p>",
+    .replace("<p id=\"user-status\" class=\"user-status\"></p>",
+    sessionUser != null ?
+    "<div class=\"user-status\">..." : "<p class=\"user-status\">Вы не авторизованы</p>"),
     sessionUser != null ?
     "<div class=\"user-status\">" +
     "<p>Вы вошли как: <strong>" + escapeHtml(sessionUser) + "</strong></p>" +
@@ -214,8 +216,10 @@ public class Client implements Runnable {
 
   private String generateTestFormHtml(TestQuestions.Test test) {
     String template = getHtmlContent("test_form.html");
-
     StringBuilder questionsHtml = new StringBuilder();
+
+    questionsHtml.append("<input type=\"hidden\" name=\"test_id\" value=\"").append(test.id).append("\">");
+
     for (TestQuestions.Question q : test.questions) {
       questionsHtml.append("<div class=\"question-card\">");
       questionsHtml.append("<h2>").append(escapeHtml(q.text)).append("</h2>");
@@ -224,23 +228,25 @@ public class Client implements Runnable {
       for (Map.Entry<String, String> opt : q.options.entrySet()) {
         String key = opt.getKey();
         String value = opt.getValue();
-        String label = q.isTrueFalse ? value : key.toUpperCase() + ") " + value;
+
+        String labelText = q.isTrueFalse ? value : key.toUpperCase() + ") " + value;
 
         questionsHtml.append("<label>");
         questionsHtml.append("<input type=\"radio\" name=\"").append(q.id)
         .append("\" value=\"").append(key).append("\" required>");
-        questionsHtml.append(" ").append(escapeHtml(label));
+        questionsHtml.append(" ").append(escapeHtml(labelText));
         questionsHtml.append("</label>");
       }
       questionsHtml.append("</div></div>");
     }
 
-    questionsHtml.append("<input type=\"hidden\" name=\"test_id\" value=\"").append(test.id).append("\">");
-
-    return template
+    String result = template
+    .replaceAll("(?s)<div class=\"empty-message\"[^>]*>.*?</div>", questionsHtml.toString())
     .replace("<h1>IQ Тест</h1>", "<h1>" + escapeHtml(test.title) + "</h1>")
-    .replace("<div class=\"empty-message\">Место для ваших вопросов. Добавьте сюда 10 блоков с классом \"question-card\".</div>",
-    questionsHtml.toString());
+    .replace("<p class=\"subtitle\">Ответьте на 10 вопросов.*?</p>",
+    "<p class=\"subtitle\">Ответьте на 10 вопросов. Все поля обязательны для заполнения.</p>");
+
+    return result;
   }
 
   private String generateResultsPage(String username) {
@@ -256,7 +262,7 @@ public class Client implements Runnable {
     sb.append("<table><thead><tr><th>Тест</th><th>Результат</th></tr></thead><tbody>");
 
     results.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(e -> {
-      String name = e.getKey().equals("a") ? "IQ Тест А: Логика и Вербальные Навыки" : "IQ Тест B: Абстрактные Задачи и Смекалка";
+      String name = e.getKey().equals("a") ? "IQ Тест A: Классика и Ловушки" : "IQ Тест B: Смекалка и Внимание";
       sb.append("<tr><td>").append(escapeHtml(name)).append("</td><td><strong>").append(e.getValue()).append("/10</strong></td></tr>");
     });
 

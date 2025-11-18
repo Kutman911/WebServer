@@ -138,8 +138,18 @@
       <li><a href="/register" class="menu-link">Регистрация</a></li>
       <li><a href="/login" class="menu-link">Авторизация</a></li>
     </ul>
-    <p id="user-status" class="user-status"></p>
-  </div>
+    .replace("<p id=\"user-status\" class=\"user-status\"></p>",
+    sessionUser != null ?
+    "<div class=\"user-status\">" +
+      "<p>Вы вошли как: <strong>" + escapeHtml(sessionUser) + "</strong></p>" +
+      "<ul>" +
+        "<li><a href=\"/test\" class=\"menu-link\">Пройти Тест A</a></li>" +
+        "<li><a href=\"/test?b\" class=\"menu-link\">Пройти Тест B</a></li>" +
+        "<li><a href=\"/results\" class=\"menu-link\">Мои результаты</a></li>" +
+        "<li><a href=\"/logout\" class=\"menu-link\">Выйти</a></li>" +
+        "</ul></div>" :
+        "<p class=\"user-status\">Вы не авторизованы</p>")
+      </div>
 
-</body>
-</html>
+    </body>
+    </html>
