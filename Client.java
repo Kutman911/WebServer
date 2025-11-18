@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.net.URLDecoder;
-import java.util.List;
 
 public class Client implements Runnable {
 
@@ -30,7 +29,9 @@ public class Client implements Runnable {
     ) {
 
       String firstLine = reader.readLine();
-      if (firstLine == null) return;
+      if (firstLine == null) {
+        return;
+      }
 
       String[] parts = firstLine.split(" ");
       if (parts.length < 2) return;
@@ -68,7 +69,6 @@ public class Client implements Runnable {
       String redirectLocation = "/";
       String setCookieHeaderValue = null;
 
-      // =============== ROUTING ===============
 
       if ("/".equals(path)) {
         responseBody = getIndexContent(sessionUser);
@@ -197,21 +197,23 @@ public class Client implements Runnable {
 
 
   private String getIndexContent(String sessionUser) {
-    return getHtmlContent("index.html").replace(
-    .replace("<p id=\"user-status\" class=\"user-status\"></p>",
-    sessionUser != null ?
-    "<div class=\"user-status\">..." : "<p class=\"user-status\">Вы не авторизованы</p>"),
-    sessionUser != null ?
-    "<div class=\"user-status\">" +
-    "<p>Вы вошли как: <strong>" + escapeHtml(sessionUser) + "</strong></p>" +
-    "<ul>" +
-    "<li><a href=\"/test\" class=\"menu-link\">Пройти Тест A</a></li>" +
-    "<li><a href=\"/test?b\" class=\"menu-link\">Пройти Тест B</a></li>" +
-    "<li><a href=\"/results\" class=\"menu-link\">Мои результаты</a></li>" +
-    "<li><a href=\"/logout\" class=\"menu-link\">Выйти</a></li>" +
-    "</ul></div>" :
-    "<p class=\"user-status\">Вы не авторизованы</p>"
-    );
+    String html = getHtmlContent("index.html");
+
+    if (sessionUser != null) {
+      String loggedInMenu = "<div class=\"user-status\">" +
+      "<p>Вы вошли как: <strong>" + escapeHtml(sessionUser) + "</strong></p>" +
+      "<ul>" +
+      "<li><a href=\"/test\" class=\"menu-link\">Пройти Тест A</a></li>" +
+      "<li><a href=\"/test?b\" class=\"menu-link\">Пройти Тест B</a></li>" +
+      "<li><a href=\"/results\" class=\"menu-link\">Мои результаты</a></li>" +
+      "<li><a href=\"/logout\" class=\"menu-link\">Выйти</a></li>" +
+      "</ul></div>";
+
+      return html.replace("<p id=\"user-status\" class=\"user-status\"></p>", loggedInMenu);
+    } else {
+      return html.replace("<p id=\"user-status\" class=\"user-status\"></p>",
+      "<p class=\"user-status\">Вы не авторизованы</p>");
+    }
   }
 
   private String generateTestFormHtml(TestQuestions.Test test) {
@@ -275,7 +277,9 @@ public class Client implements Runnable {
 
   private int calculateScore(String testId, Map<String, String> answers) {
     TestQuestions.Test test = TestQuestions.getTest(testId);
-    if (test == null) return 0;
+    if (test == null) {
+      return 0;
+    }
     int score = 0;
     for (TestQuestions.Question q : test.questions) {
       String userAnswer = answers.get(q.id);
@@ -307,7 +311,9 @@ public class Client implements Runnable {
   }
 
   private String getCookieValue(String header, String name) {
-    if (header == null) return null;
+    if (header == null) {
+      return null;
+    }
     for (String cookie : header.split(";")) {
       String trimmed = cookie.trim();
       if (trimmed.startsWith(name + "=")) {
@@ -349,7 +355,9 @@ public class Client implements Runnable {
   }
 
   private String escapeHtml(String s) {
-    if (s == null) return "";
+    if (s == null) {
+      return "";
+    }
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
   }
 
