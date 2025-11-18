@@ -2,21 +2,122 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Результаты Теста</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IQ-Платформа | Результаты</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; text-align: center; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h1 { color: #28a745; }
-        .score { font-size: 3em; color: #007bff; font-weight: bold; margin: 20px 0; }
+        :root {
+            --primary-color: #1D4ED8;
+            --secondary-color: #F3F4F6;
+            --score-color: #F59E0B;
+            --text-dark: #1F2937;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--secondary-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 400px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .icon {
+            font-size: 3rem;
+            color: var(--score-color);
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .username {
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            margin-bottom: 25px;
+        }
+
+        .score-display {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 50%;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(29, 78, 216, 0.5);
+            min-width: 120px;
+            min-height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .score-comment {
+            color: var(--text-dark);
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .back-link:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Desktop/Tablet Optimization */
+        @media (min-width: 600px) {
+            .card {
+                max-width: 500px;
+                padding: 50px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Ваш Результат</h1>
-        <p>Поздравляем, !</p>
-        <div class="score">/ 3</div>
-        <p></p>
-        <p><a href="/">На главную</a></p>
+    <div class="card">
+        <div class="icon">✨</div>
+        <h1>Результаты Теста</h1>
+
+        <p class="username">Поздравляем, **{{username}}**!</p>
+
+        <div class="score-display">
+            4 / 10
+        </div>
+
+        <p class="score-comment">
+            Ваш результат показывает, что у вас есть потенциал для развития логического мышления. Продолжайте тренироваться!
+        </p>
+
+        <a href="/" class="back-link">Вернуться на главную</a>
     </div>
 </body>
 </html>

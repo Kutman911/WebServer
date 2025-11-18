@@ -1,29 +1,145 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Главная</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding-top: 50px; background: #f0f2f5;}
-        .container { width: 80%; max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        ul { list-style: none; padding: 0; }
-        li { margin: 10px 0; }
-        a { text-decoration: none; color: #007bff; font-weight: bold; }
-        a:hover { text-decoration: underline; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Главная - IQ Платформа</title>
+  <style>
+  :root {
+    --primary-blue: #1D4ED8;
+    --secondary-bg: #F3F4F6;
+    --text-color: #374151;
+    --link-color: #3B82F6;
+    --border-color: #E5E7EB;
+    --box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    --transition: all 0.2s ease-in-out;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: var(--secondary-bg);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .header-banner {
+    width: 100%;
+    background-color: var(--primary-blue);
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  .header-banner h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+  }
+
+  .container {
+    width: 90%;
+    max-width: 600px;
+    margin: 30px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: var(--box-shadow);
+    text-align: center;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    color: var(--primary-blue);
+    margin-top: 0;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 20px;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    margin: 15px 0;
+  }
+
+  .menu-link {
+    display: block;
+    text-decoration: none;
+    color: var(--link-color);
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+  }
+
+  .menu-link:hover {
+    background-color: var(--secondary-bg);
+    color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  }
+
+  .description-block {
+    padding: 15px;
+    background-color: #F8FAFC;
+    border: 1px solid #E0F2F1;
+    border-left: 5px solid var(--primary-blue);
+    border-radius: 8px;
+    margin-bottom: 30px;
+    font-style: italic;
+    text-align: left;
+    font-size: 0.95rem;
+  }
+
+  .user-status {
+    margin-top: 25px;
+    font-weight: 500;
+    color: #10B981;
+  }
+
+  @media (max-width: 480px) {
+    .container {
+      padding: 20px 15px;
+      margin: 15px auto;
+    }
+    .header-banner h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Добро пожаловать на Наш Нативный Сервер</h1>
-        <p>Это простейший веб-сервер, написанный на чистом Java.</p>
 
-        <h2>Меню</h2>
-        <ul>
-            <li><a href="/register">Регистрация</a></li>
-            <li><a href="/login">Авторизация</a></li>
-            <li><a href="/test">IQ Тест</a></li>
-        </ul>
-        <p id="user-status"></p>
+  <div class="header-banner">
+    <h1>IQ Платформа</h1>
+  </div>
+
+  <div class="container">
+    <div class="description-block">
+      <p>Добро пожаловать на IQ тест.</p>
+      <p>Воспользуйтесь нашим меню для регистрации, авторизации.</p>
     </div>
-    </body>
+
+    <h2>Навигация</h2>
+    <ul>
+      <li><a href="/register" class="menu-link">Регистрация</a></li>
+      <li><a href="/login" class="menu-link">Авторизация</a></li>
+    </ul>
+    <p id="user-status" class="user-status"></p>
+  </div>
+
+</body>
 </html>
