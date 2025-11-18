@@ -14,7 +14,6 @@
     --box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     --transition: all 0.2s ease-in-out;
   }
-
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
@@ -26,7 +25,6 @@
     align-items: center;
     min-height: 100vh;
   }
-
   .header-banner {
     width: 100%;
     background-color: var(--primary-blue);
@@ -35,13 +33,11 @@
     text-align: center;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   }
-
   .header-banner h1 {
     margin: 0;
     font-size: 1.8rem;
     font-weight: 600;
   }
-
   .container {
     width: 90%;
     max-width: 600px;
@@ -52,7 +48,6 @@
     box-shadow: var(--box-shadow);
     text-align: center;
   }
-
   h2 {
     font-size: 1.5rem;
     color: var(--primary-blue);
@@ -61,17 +56,14 @@
     border-bottom: 2px solid var(--border-color);
     margin-bottom: 20px;
   }
-
   ul {
     list-style: none;
     padding: 0;
     margin: 0;
   }
-
   li {
     margin: 15px 0;
   }
-
   .menu-link {
     display: block;
     text-decoration: none;
@@ -83,14 +75,12 @@
     border: 1px solid var(--border-color);
     transition: var(--transition);
   }
-
   .menu-link:hover {
     background-color: var(--secondary-bg);
     color: var(--primary-blue);
     border-color: var(--primary-blue);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   }
-
   .description-block {
     padding: 15px;
     background-color: #F8FAFC;
@@ -102,13 +92,11 @@
     text-align: left;
     font-size: 0.95rem;
   }
-
   .user-status {
     margin-top: 25px;
     font-weight: 500;
     color: #10B981;
   }
-
   @media (max-width: 480px) {
     .container {
       padding: 20px 15px;
@@ -118,11 +106,9 @@
       font-size: 1.5rem;
     }
   }
-
   </style>
 </head>
 <body>
-
   <div class="header-banner">
     <h1>IQ Платформа</h1>
   </div>
@@ -138,18 +124,8 @@
       <li><a href="/register" class="menu-link">Регистрация</a></li>
       <li><a href="/login" class="menu-link">Авторизация</a></li>
     </ul>
-    .replace("<p id=\"user-status\" class=\"user-status\"></p>",
-    sessionUser != null ?
-    "<div class=\"user-status\">" +
-      "<p>Вы вошли как: <strong>" + escapeHtml(sessionUser) + "</strong></p>" +
-      "<ul>" +
-        "<li><a href=\"/test\" class=\"menu-link\">Пройти Тест A</a></li>" +
-        "<li><a href=\"/test?b\" class=\"menu-link\">Пройти Тест B</a></li>" +
-        "<li><a href=\"/results\" class=\"menu-link\">Мои результаты</a></li>" +
-        "<li><a href=\"/logout\" class=\"menu-link\">Выйти</a></li>" +
-        "</ul></div>" :
-        "<p class=\"user-status\">Вы не авторизованы</p>")
-      </div>
 
-    </body>
-    </html>
+    <p id="user-status" class="user-status"></p>
+  </div>
+</body>
+</html>
